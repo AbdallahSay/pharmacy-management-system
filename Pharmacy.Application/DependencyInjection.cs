@@ -1,5 +1,7 @@
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using Pharmacy.Application.Categories.Interfaces;
+using Pharmacy.Application.Categories.Services;
 using Pharmacy.Application.Medicines.Interfaces;
 using Pharmacy.Application.Medicines.Services;
 using System.Reflection;
@@ -14,6 +16,7 @@ public static class DependencyInjection
 
         services.AddValidatorsFromAssembly(assembly);
         services.AddScoped<IMedicineService, MedicineService>();
+        services.AddScoped<ICategoryService, CategoryService>();
 
         return services;
     }
