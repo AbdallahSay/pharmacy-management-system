@@ -5,4 +5,6 @@ public sealed record AuthResponseDto(
     DateTime ExpiresAt,
     string Email,
     string FullName,
+    int TenantId,
+    string TenantName,
     IReadOnlyList<string> Roles);

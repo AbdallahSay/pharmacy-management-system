@@ -68,11 +68,15 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
 
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
-        var rowsAffected = await _dbSet
-            .Where(e => e.Id == id)
-            .ExecuteDeleteAsync(cancellationToken);
+        var entity = await _dbSet.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
 
-        return rowsAffected > 0;
+        if (entity is null)
+            return false;
+
+        entity.IsDeleted = true;
+        entity.DeletedAt = DateTime.UtcNow;
+
+        return true;
     }
 
     private static void ValidatePagination(int skip, int take)

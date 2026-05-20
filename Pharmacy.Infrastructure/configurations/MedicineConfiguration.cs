@@ -20,6 +20,9 @@ namespace Pharmacy.Infrastructure.configurations
                 .HasColumnType("decimal(18,2)")
                 .IsRequired();
 
+            builder.HasIndex(m => new { m.TenantId, m.Name })
+                .IsUnique()
+                .HasFilter("[IsDeleted] = 0");
         }
     }
 }

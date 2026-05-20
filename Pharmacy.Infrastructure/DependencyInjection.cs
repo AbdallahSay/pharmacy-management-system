@@ -5,12 +5,16 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Pharmacy.Application.Auth.Interfaces;
-using Pharmacy.Application.Sales.Interfaces;
 using Pharmacy.Application.Common.Constants;
+using Pharmacy.Application.Common.Interfaces;
+using Pharmacy.Application.Sales.Interfaces;
+using Pharmacy.Application.Tenancy.Interfaces;
 using Pharmacy.Domain.Entities;
 using Pharmacy.Domain.Interfaces;
 using Pharmacy.Infrastructure.Auth;
 using Pharmacy.Infrastructure.Persistence;
+using Pharmacy.Infrastructure.Persistence.Interceptors;
+using Pharmacy.Infrastructure.Tenancy;
 using System.Text;
 
 namespace Pharmacy.Infrastructure;
@@ -24,7 +28,10 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("DefaultConnection");
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);
 
-        services.AddDbContext<PharmacyDbContext>(options =>
+        services.AddScoped<AuditableEntityInterceptor>();
+
+        services.AddDbContext<PharmacyDbContext>((serviceProvider, options) =>
+        {
             options.UseSqlServer(connectionString, sql =>
             {
                 sql.EnableRetryOnFailure(
@@ -32,7 +39,10 @@ public static class DependencyInjection
                     maxRetryDelay: TimeSpan.FromSeconds(30),
                     errorNumbersToAdd: null);
                 sql.MigrationsAssembly(typeof(PharmacyDbContext).Assembly.FullName);
-            }));
+            });
+
+            options.AddInterceptors(serviceProvider.GetRequiredService<AuditableEntityInterceptor>());
+        });
 
         services.AddIdentity<ApplicationUser, IdentityRole<int>>(options =>
             {
@@ -91,6 +101,7 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IAuthService, IdentityAuthService>();
         services.AddScoped<ISaleReadRepository, SaleReadRepository>();
+        services.AddScoped<ITenantResolver, TenantResolver>();
 
         return services;
     }

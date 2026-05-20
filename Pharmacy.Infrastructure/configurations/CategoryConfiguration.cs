@@ -16,6 +16,10 @@ namespace Pharmacy.Infrastructure.configurations
                 .WithOne(m => m.Category)
                 .HasForeignKey(m => m.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasIndex(c => new { c.TenantId, c.Name })
+                .IsUnique()
+                .HasFilter("[IsDeleted] = 0");
         }
     }
 }
