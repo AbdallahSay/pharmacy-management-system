@@ -1,14 +1,12 @@
 using FluentValidation;
+using Pharmacy.Application.Medicines.DTOs;
 
-namespace Pharmacy.Application.Medicines.Commands.UpdateMedicine;
+namespace Pharmacy.Application.Medicines.Validators;
 
-public sealed class UpdateMedicineCommandValidator : AbstractValidator<UpdateMedicineCommand>
+public sealed class UpdateMedicineDtoValidator : AbstractValidator<UpdateMedicineDto>
 {
-    public UpdateMedicineCommandValidator()
+    public UpdateMedicineDtoValidator()
     {
-        RuleFor(x => x.Id)
-            .GreaterThan(0);
-
         RuleFor(x => x.Name)
             .NotEmpty()
             .MaximumLength(100);
