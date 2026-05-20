@@ -67,7 +67,7 @@ public sealed class ExceptionHandlingMiddleware
             {
                 title,
                 status = (int)statusCode,
-                detail = "Cannot delete this medicine because it is referenced by existing sales."
+                detail = "Cannot delete this resource because it is referenced by related records."
             },
             _ => new
             {
