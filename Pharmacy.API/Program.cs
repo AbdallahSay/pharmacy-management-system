@@ -1,4 +1,6 @@
 using Pharmacy.API.Extensions;
+using Pharmacy.API.Middleware;
+using Pharmacy.Application;
 using Pharmacy.Infrastructure;
 using Scalar.AspNetCore;
 
@@ -10,6 +12,7 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        builder.Services.AddApplication();
         builder.Services.AddInfrastructure(builder.Configuration);
         builder.Services.AddControllers();
         builder.Services.AddOpenApi("Pharmacy");
@@ -24,6 +27,7 @@ public class Program
             app.MapScalarApiReference(options => options.Title = "Pharmacy API");
         }
 
+        app.UseMiddleware<ExceptionHandlingMiddleware>();
         app.UseHttpsRedirection();
         app.UseAuthorization();
         app.MapControllers();
