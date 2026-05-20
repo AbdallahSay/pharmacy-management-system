@@ -4,6 +4,8 @@ using Pharmacy.Application.Categories.Interfaces;
 using Pharmacy.Application.Categories.Services;
 using Pharmacy.Application.Medicines.Interfaces;
 using Pharmacy.Application.Medicines.Services;
+using Pharmacy.Application.Sales.Interfaces;
+using Pharmacy.Application.Sales.Services;
 using System.Reflection;
 
 namespace Pharmacy.Application;
@@ -17,6 +19,7 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(assembly);
         services.AddScoped<IMedicineService, MedicineService>();
         services.AddScoped<ICategoryService, CategoryService>();
+        services.AddScoped<ISaleService, SaleService>();
 
         return services;
     }

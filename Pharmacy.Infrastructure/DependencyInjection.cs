@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Pharmacy.Application.Auth.Interfaces;
+using Pharmacy.Application.Sales.Interfaces;
 using Pharmacy.Application.Common.Constants;
 using Pharmacy.Domain.Entities;
 using Pharmacy.Domain.Interfaces;
@@ -89,6 +90,7 @@ public static class DependencyInjection
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IAuthService, IdentityAuthService>();
+        services.AddScoped<ISaleReadRepository, SaleReadRepository>();
 
         return services;
     }

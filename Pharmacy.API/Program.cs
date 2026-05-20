@@ -14,6 +14,7 @@ public class Program
 
         builder.Services.AddApplication();
         builder.Services.AddInfrastructure(builder.Configuration);
+        builder.Services.AddApiServices();
         builder.Services.AddControllers();
         builder.Services.AddOpenApi("Pharmacy" , options => 
         options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
