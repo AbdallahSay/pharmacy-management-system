@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Pharmacy.Application.Common.Models;
 using Pharmacy.Application.Medicines.Commands.CreateMedicine;
+using Pharmacy.Application.Medicines.Commands.DeleteMedicine;
 using Pharmacy.Application.Medicines.Commands.UpdateMedicine;
 using Pharmacy.Application.Medicines.Contracts;
 using Pharmacy.Application.Medicines.DTOs;
@@ -91,6 +92,17 @@ public class MedicinesController : ControllerBase
                 dto.CategoryId),
             cancellationToken);
 
+        return NoContent();
+    }
+
+    [HttpDelete("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+    {
+        await _mediator.Send(new DeleteMedicineCommand(id), cancellationToken);
         return NoContent();
     }
 }
