@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using Pharmacy.Infrastructure;
 using Pharmacy.Infrastructure.Identity;
+using Pharmacy.Infrastructure.Persistence;
 
 namespace Pharmacy.API.Extensions;
 

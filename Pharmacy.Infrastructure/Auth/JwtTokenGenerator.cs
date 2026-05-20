@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Pharmacy.Domain.Common;
 using Pharmacy.Domain.Entities;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -16,7 +17,10 @@ public sealed class JwtTokenGenerator
         _settings = settings.Value;
     }
 
-    public (string AccessToken, DateTime ExpiresAt) Generate(ApplicationUser user, IList<string> roles)
+    public (string AccessToken, DateTime ExpiresAt) Generate(
+        ApplicationUser user,
+        IList<string> roles,
+        int tenantId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(_settings.Key);
         ArgumentException.ThrowIfNullOrWhiteSpace(_settings.Issuer);
@@ -29,7 +33,8 @@ public sealed class JwtTokenGenerator
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
             new(JwtRegisteredClaimNames.Name, user.FullName),
-            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new(TenantClaimTypes.TenantId, tenantId.ToString())
         };
 
         claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));

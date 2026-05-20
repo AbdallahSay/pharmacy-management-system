@@ -22,6 +22,7 @@ public class Program
         var app = builder.Build();
 
         await app.ApplyMigrationsAsync();
+        await app.SeedIdentityAsync();
 
         if (app.Environment.IsDevelopment())
         {
@@ -36,6 +37,7 @@ public class Program
         app.UseMiddleware<ExceptionHandlingMiddleware>();
         app.UseHttpsRedirection();
         app.UseAuthentication();
+        app.UseMiddleware<TenantResolutionMiddleware>();
         app.UseAuthorization();
         app.MapControllers();
 
