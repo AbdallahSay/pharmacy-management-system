@@ -25,6 +25,7 @@ public sealed class JwtTokenGenerator
         var expiresAt = DateTime.UtcNow.AddMinutes(_settings.ExpiresInMinutes);
         var claims = new List<Claim>
         {
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
             new(JwtRegisteredClaimNames.Name, user.FullName),
