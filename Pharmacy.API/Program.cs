@@ -24,22 +24,23 @@ public class Program
         await app.ApplyMigrationsAsync();
         await app.SeedIdentityAsync();
 
-        if (app.Environment.IsDevelopment())
-        {
+        
             app.MapOpenApi();
             app.MapScalarApiReference(options =>
             {
                 options.Title = "Pharmacy API";
                 options.OpenApiRoutePattern = "/openapi/Pharmacy.json";
             });
-        }
+        
 
         app.UseMiddleware<ExceptionHandlingMiddleware>();
         app.UseHttpsRedirection();
         app.UseAuthentication();
         app.UseMiddleware<TenantResolutionMiddleware>();
+        app.UseRouting();
         app.UseAuthorization();
         app.MapControllers();
+        
 
         await app.RunAsync();
     }

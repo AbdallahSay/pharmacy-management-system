@@ -8,8 +8,8 @@ public static class DatabaseExtensions
 {
     public static async Task ApplyMigrationsAsync(this WebApplication app)
     {
-        if (!app.Environment.IsDevelopment())
-            return;
+        //if (!app.Environment.IsDevelopment())
+        //    return;
 
         await using var scope = app.Services.CreateAsyncScope();
         var context = scope.ServiceProvider.GetRequiredService<PharmacyDbContext>();
