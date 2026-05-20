@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Pharmacy.Application.Common.Constants;
 using Pharmacy.Application.Categories.Contracts;
 using Pharmacy.Application.Categories.DTOs;
 using Pharmacy.Application.Categories.Interfaces;
@@ -6,6 +8,7 @@ using Pharmacy.Application.Common.Models;
 
 namespace Pharmacy.API.Controllers;
 
+[Authorize(Policy = AuthPolicies.PharmacyStaff)]
 [ApiController]
 [Route("api/[controller]")]
 public class CategoriesController : ControllerBase

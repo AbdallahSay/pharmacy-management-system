@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Pharmacy.Infrastructure;
+using Pharmacy.Infrastructure.Identity;
 
 namespace Pharmacy.API.Extensions;
 
@@ -13,5 +14,13 @@ public static class DatabaseExtensions
         await using var scope = app.Services.CreateAsyncScope();
         var context = scope.ServiceProvider.GetRequiredService<PharmacyDbContext>();
         await context.Database.MigrateAsync();
+    }
+
+    public static async Task SeedIdentityAsync(this WebApplication app)
+    {
+        if (!app.Environment.IsDevelopment())
+            return;
+
+        await IdentityDataSeeder.SeedAsync(app.Services);
     }
 }

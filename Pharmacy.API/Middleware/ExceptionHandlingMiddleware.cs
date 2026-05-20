@@ -41,6 +41,7 @@ public sealed class ExceptionHandlingMiddleware
             ValidationException => (HttpStatusCode.BadRequest, "Validation failed"),
             NotFoundException => (HttpStatusCode.NotFound, "Resource not found"),
             ConflictException => (HttpStatusCode.Conflict, "Conflict"),
+            UnauthorizedException => (HttpStatusCode.Unauthorized, "Unauthorized"),
             DbUpdateException dbEx when IsForeignKeyViolation(dbEx) => (
                 HttpStatusCode.Conflict,
                 "Conflict"),
