@@ -1,10 +1,11 @@
 using FluentValidation;
+using Pharmacy.Application.Medicines.DTOs;
 
-namespace Pharmacy.Application.Medicines.Commands.CreateMedicine;
+namespace Pharmacy.Application.Medicines.Validators;
 
-public sealed class CreateMedicineCommandValidator : AbstractValidator<CreateMedicineCommand>
+public sealed class CreateMedicineDtoValidator : AbstractValidator<CreateMedicineDto>
 {
-    public CreateMedicineCommandValidator()
+    public CreateMedicineDtoValidator()
     {
         RuleFor(x => x.Name)
             .NotEmpty()

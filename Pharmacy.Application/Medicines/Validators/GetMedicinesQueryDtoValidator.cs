@@ -1,11 +1,12 @@
 using FluentValidation;
+using Pharmacy.Application.Medicines.DTOs;
 using Pharmacy.Domain.Common;
 
-namespace Pharmacy.Application.Medicines.Queries.GetMedicines;
+namespace Pharmacy.Application.Medicines.Validators;
 
-public sealed class GetMedicinesQueryValidator : AbstractValidator<GetMedicinesQuery>
+public sealed class GetMedicinesQueryDtoValidator : AbstractValidator<GetMedicinesQueryDto>
 {
-    public GetMedicinesQueryValidator()
+    public GetMedicinesQueryDtoValidator()
     {
         RuleFor(x => x.Skip)
             .GreaterThanOrEqualTo(0);

@@ -1,6 +1,7 @@
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
-using Pharmacy.Application.Common.Behaviors;
+using Pharmacy.Application.Medicines.Interfaces;
+using Pharmacy.Application.Medicines.Services;
 using System.Reflection;
 
 namespace Pharmacy.Application;
@@ -11,13 +12,8 @@ public static class DependencyInjection
     {
         var assembly = Assembly.GetExecutingAssembly();
 
-        services.AddMediatR(configuration =>
-        {
-            configuration.RegisterServicesFromAssembly(assembly);
-            configuration.AddOpenBehavior(typeof(ValidationBehavior<,>));
-        });
-
         services.AddValidatorsFromAssembly(assembly);
+        services.AddScoped<IMedicineService, MedicineService>();
 
         return services;
     }

@@ -1,13 +1,8 @@
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Pharmacy.Application.Common.Models;
-using Pharmacy.Application.Medicines.Commands.CreateMedicine;
-using Pharmacy.Application.Medicines.Commands.DeleteMedicine;
-using Pharmacy.Application.Medicines.Commands.UpdateMedicine;
 using Pharmacy.Application.Medicines.Contracts;
 using Pharmacy.Application.Medicines.DTOs;
-using Pharmacy.Application.Medicines.Queries.GetMedicineById;
-using Pharmacy.Application.Medicines.Queries.GetMedicines;
+using Pharmacy.Application.Medicines.Interfaces;
 
 namespace Pharmacy.API.Controllers;
 
@@ -15,11 +10,11 @@ namespace Pharmacy.API.Controllers;
 [Route("api/[controller]")]
 public class MedicinesController : ControllerBase
 {
-    private readonly IMediator _mediator;
+    private readonly IMedicineService _medicineService;
 
-    public MedicinesController(IMediator mediator)
+    public MedicinesController(IMedicineService medicineService)
     {
-        _mediator = mediator;
+        _medicineService = medicineService;
     }
 
     [HttpGet]
@@ -29,10 +24,7 @@ public class MedicinesController : ControllerBase
         [FromQuery] GetMedicinesQueryDto query,
         CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(
-            new GetMedicinesQuery(query.Skip, query.Take),
-            cancellationToken);
-
+        var result = await _medicineService.GetPagedAsync(query, cancellationToken);
         return Ok(result);
     }
 
@@ -44,7 +36,7 @@ public class MedicinesController : ControllerBase
         int id,
         CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetMedicineByIdQuery(id), cancellationToken);
+        var result = await _medicineService.GetByIdAsync(id, cancellationToken);
         return Ok(result);
     }
 
@@ -56,13 +48,7 @@ public class MedicinesController : ControllerBase
         [FromBody] CreateMedicineDto dto,
         CancellationToken cancellationToken)
     {
-        var command = new CreateMedicineCommand(
-            dto.Name,
-            dto.Price,
-            dto.Stock,
-            dto.CategoryId);
-
-        var result = await _mediator.Send(command, cancellationToken);
+        var result = await _medicineService.CreateAsync(dto, cancellationToken);
 
         return CreatedAtAction(
             nameof(GetById),
@@ -79,19 +65,7 @@ public class MedicinesController : ControllerBase
         [FromBody] UpdateMedicineDto dto,
         CancellationToken cancellationToken)
     {
-        await _mediator.Send(
-            new UpdateMedicineCommand(
-                id,
-                dto.Name,
-                dto.Price,
-                dto.Description,
-                dto.Stock,
-                dto.MinStock,
-                dto.ExpiryDate,
-                dto.IsActive,
-                dto.CategoryId),
-            cancellationToken);
-
+        await _medicineService.UpdateAsync(id, dto, cancellationToken);
         return NoContent();
     }
 
@@ -102,7 +76,7 @@ public class MedicinesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
-        await _mediator.Send(new DeleteMedicineCommand(id), cancellationToken);
+        await _medicineService.DeleteAsync(id, cancellationToken);
         return NoContent();
     }
 }
