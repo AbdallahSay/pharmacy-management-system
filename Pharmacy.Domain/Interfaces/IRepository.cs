@@ -10,6 +10,8 @@ public interface IRepository<T> where T : BaseEntity
 {
     Task<IReadOnlyList<T>> ListAsync(int skip, int take, CancellationToken cancellationToken = default);
 
+    Task<int> CountAsync(CancellationToken cancellationToken = default);
+
     Task<T?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 
     /// <summary>Tracked load for in-place mutation before SaveChanges.</summary>

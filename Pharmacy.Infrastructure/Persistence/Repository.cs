@@ -31,6 +31,11 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
             .ToListAsync(cancellationToken);
     }
 
+    public Task<int> CountAsync(CancellationToken cancellationToken = default)
+    {
+        return _dbSet.AsNoTracking().CountAsync(cancellationToken);
+    }
+
     public async Task<T?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return await _dbSet
