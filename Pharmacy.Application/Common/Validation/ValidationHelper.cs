@@ -3,7 +3,7 @@ using FluentValidation.Results;
 
 namespace Pharmacy.Application.Common.Validation;
 
-internal static class ValidationHelper
+public static class ValidationHelper
 {
     public static async Task ValidateAndThrowAsync<T>(
         T instance,

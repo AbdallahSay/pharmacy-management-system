@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Pharmacy.Application.Common.Constants;
 using Pharmacy.Application.Common.Models;
 using Pharmacy.Application.Medicines.Contracts;
 using Pharmacy.Application.Medicines.DTOs;
@@ -6,6 +8,7 @@ using Pharmacy.Application.Medicines.Interfaces;
 
 namespace Pharmacy.API.Controllers;
 
+[Authorize(Policy = AuthPolicies.PharmacyStaff)]
 [ApiController]
 [Route("api/[controller]")]
 public class MedicinesController : ControllerBase
