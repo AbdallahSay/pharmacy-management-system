@@ -9,6 +9,7 @@ using Pharmacy.Application.Common.Constants;
 using Pharmacy.Application.Common.Interfaces;
 using Pharmacy.Application.Sales.Interfaces;
 using Pharmacy.Application.Tenancy.Interfaces;
+using Pharmacy.Application.Tenants.Interfaces;
 using Pharmacy.Domain.Entities;
 using Pharmacy.Domain.Interfaces;
 using Pharmacy.Infrastructure.Auth;
@@ -45,16 +46,16 @@ public static class DependencyInjection
         });
 
         services.AddIdentity<ApplicationUser, IdentityRole<int>>(options =>
-            {
-                options.Password.RequireDigit = true;
-                options.Password.RequireLowercase = true;
-                options.Password.RequireUppercase = true;
-                options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequiredLength = 8;
-                options.User.RequireUniqueEmail = true;
-                options.Lockout.MaxFailedAccessAttempts = 5;
-                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
-            })
+        {
+            options.Password.RequireDigit = true;
+            options.Password.RequireLowercase = true;
+            options.Password.RequireUppercase = true;
+            options.Password.RequireNonAlphanumeric = false;
+            options.Password.RequiredLength = 8;
+            options.User.RequireUniqueEmail = true;
+            options.Lockout.MaxFailedAccessAttempts = 5;
+            options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+        })
             .AddEntityFrameworkStores<PharmacyDbContext>()
             .AddDefaultTokenProviders();
 
@@ -69,10 +70,10 @@ public static class DependencyInjection
         ArgumentException.ThrowIfNullOrWhiteSpace(jwtSettings.Audience);
 
         services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
             .AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters
@@ -102,6 +103,7 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, IdentityAuthService>();
         services.AddScoped<ISaleReadRepository, SaleReadRepository>();
         services.AddScoped<ITenantResolver, TenantResolver>();
+        services.AddScoped<ITenantService, TenantService>();
 
         return services;
     }
