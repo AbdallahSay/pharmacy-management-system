@@ -6,6 +6,7 @@ using Pharmacy.Application.Medicines.Interfaces;
 using Pharmacy.Application.Medicines.Services;
 using Pharmacy.Application.Sales.Interfaces;
 using Pharmacy.Application.Sales.Services;
+using Pharmacy.Application.Tenants.Interfaces;
 using System.Reflection;
 
 namespace Pharmacy.Application;
@@ -20,6 +21,8 @@ public static class DependencyInjection
         services.AddScoped<IMedicineService, MedicineService>();
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<ISaleService, SaleService>();
+        // ITenantService implementation is registered in Infrastructure
+        // because it needs direct access to UserManager and DbContext.
 
         return services;
     }
