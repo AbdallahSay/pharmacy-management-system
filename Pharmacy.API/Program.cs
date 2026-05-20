@@ -15,17 +15,21 @@ public class Program
         builder.Services.AddApplication();
         builder.Services.AddInfrastructure(builder.Configuration);
         builder.Services.AddControllers();
-        builder.Services.AddOpenApi("Pharmacy");
+        builder.Services.AddOpenApi("Pharmacy" , options => 
+        options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
 
         var app = builder.Build();
 
         await app.ApplyMigrationsAsync();
-        await app.SeedIdentityAsync();
 
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
-            app.MapScalarApiReference(options => options.Title = "Pharmacy API");
+            app.MapScalarApiReference(options =>
+            {
+                options.Title = "Pharmacy API";
+                options.OpenApiRoutePattern = "/openapi/Pharmacy.json";
+            });
         }
 
         app.UseMiddleware<ExceptionHandlingMiddleware>();
