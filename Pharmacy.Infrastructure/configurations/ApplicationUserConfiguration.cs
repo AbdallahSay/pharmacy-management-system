@@ -15,6 +15,8 @@ public sealed class ApplicationUserConfiguration : IEntityTypeConfiguration<Appl
             .IsRequired()
             .HasMaxLength(100);
 
+        builder.HasAlternateKey(u => new { u.TenantId, u.Id });
+
         builder.HasIndex(u => new { u.TenantId, u.NormalizedEmail })
             .IsUnique()
             .HasFilter("[NormalizedEmail] IS NOT NULL");

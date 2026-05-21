@@ -9,6 +9,8 @@ namespace Pharmacy.Infrastructure.configurations
         {
             builder.HasKey(s => s.Id);
 
+            builder.HasAlternateKey(s => new { s.TenantId, s.Id });
+
             builder.Property(s => s.TotalAmount)
                 .HasColumnType("decimal(18,2)");
 
@@ -17,15 +19,15 @@ namespace Pharmacy.Infrastructure.configurations
 
             builder.HasOne(s => s.User)
                 .WithMany()
-                .HasForeignKey(s => s.UserId)
+                .HasForeignKey(s => new { s.TenantId, s.UserId })
+                .HasPrincipalKey(u => new { u.TenantId, u.Id })
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasMany(s => s.SaleItems)
                 .WithOne(si => si.Sale)
-                .HasForeignKey(si => si.SaleId)
+                .HasForeignKey(si => new { si.TenantId, si.SaleId })
+                .HasPrincipalKey(s => new { s.TenantId, s.Id })
                 .OnDelete(DeleteBehavior.Cascade);
-
-
         }
     }
 }

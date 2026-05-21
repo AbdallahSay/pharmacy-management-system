@@ -9,6 +9,8 @@ namespace Pharmacy.Infrastructure.configurations
         {
             builder.HasKey(m => m.Id);
 
+            builder.HasAlternateKey(m => new { m.TenantId, m.Id });
+
             builder.Property(m => m.Name)
                 .IsRequired()
                 .HasMaxLength(100);
