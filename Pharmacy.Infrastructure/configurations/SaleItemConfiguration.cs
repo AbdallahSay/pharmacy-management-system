@@ -17,7 +17,8 @@ namespace Pharmacy.Infrastructure.configurations
 
             builder.HasOne(si => si.Medicine)
                    .WithMany()
-                   .HasForeignKey(si => si.MedicineId)
+                   .HasForeignKey(si => new { si.TenantId, si.MedicineId })
+                   .HasPrincipalKey(m => new { m.TenantId, m.Id })
                    .OnDelete(DeleteBehavior.Restrict);
         }
     }

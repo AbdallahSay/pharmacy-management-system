@@ -69,4 +69,31 @@ public sealed class TenantResolver : ITenantResolver
                       tu.Tenant.IsActive,
                 cancellationToken);
     }
+
+    public async Task<TenantResolution?> ResolveForTenantAsync(
+        int userId,
+        int tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        using var bypass = _tenantContext.BeginBypass();
+
+        var membership = await _context.TenantUsers
+            .AsNoTracking()
+            .Include(tu => tu.Tenant)
+            .Include(tu => tu.User)
+            .Where(tu =>
+                tu.UserId == userId &&
+                tu.TenantId == tenantId &&
+                tu.User.TenantId == tenantId &&
+                tu.Tenant.IsActive)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (membership is null)
+            return null;
+
+        return new TenantResolution(
+            membership.TenantId,
+            membership.Tenant.Name,
+            membership.Role);
+    }
 }

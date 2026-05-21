@@ -24,7 +24,8 @@ public class TenantUserConfiguration : IEntityTypeConfiguration<TenantUser>
 
         builder.HasOne(tu => tu.User)
             .WithMany()
-            .HasForeignKey(tu => tu.UserId)
+            .HasForeignKey(tu => new { tu.TenantId, tu.UserId })
+            .HasPrincipalKey(u => new { u.TenantId, u.Id })
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

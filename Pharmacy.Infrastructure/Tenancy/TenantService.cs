@@ -158,6 +158,7 @@ public sealed class TenantService : ITenantService
 
     private static string BuildTenantUserName(int tenantId, string email)
     {
-        return $"{tenantId}:{email.Trim().ToLowerInvariant()}";
+        var normalized = new string(email.Trim().ToLowerInvariant().Where(char.IsLetterOrDigit).ToArray());
+        return $"tenant{tenantId}{normalized}";
     }
 }
