@@ -7,7 +7,7 @@ namespace Pharmacy.Application.Tenants.Interfaces;
 public interface ITenantService
 {
     /// <summary>
-    /// Creates a new pharmacy tenant and its first Admin user in one atomic operation.
+    /// Creates a new pharmacy tenant and its first TenantAdmin user in one atomic operation.
     /// </summary>
     Task<TenantCreatedResponse> CreateAsync(
         CreateTenantDto dto,

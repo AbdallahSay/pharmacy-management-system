@@ -1,7 +1,7 @@
 ﻿namespace Pharmacy.Application.Tenants.Contracts;
 
 /// <summary>
-/// Returned after successfully creating a new tenant + its first Admin user.
+/// Returned after successfully creating a new tenant + its first TenantAdmin user.
 /// </summary>
 public sealed record TenantCreatedResponse(
     int TenantId,

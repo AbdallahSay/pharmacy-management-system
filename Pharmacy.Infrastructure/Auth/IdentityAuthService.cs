@@ -51,28 +51,39 @@ public sealed class IdentityAuthService : IAuthService
     {
         await ValidationHelper.ValidateAndThrowAsync(dto, _loginValidator, cancellationToken);
 
-        var user = await _userManager.FindByEmailAsync(dto.Email);
+        var normalizedEmail = _userManager.NormalizeEmail(dto.Email.Trim());
 
-        if (user is null)
+        using var bypass = _tenantContext.BeginBypass();
+
+        var membership = await _dbContext.TenantUsers
+            .AsNoTracking()
+            .Include(tu => tu.Tenant)
+            .Include(tu => tu.User)
+            .Where(tu =>
+                tu.User.NormalizedEmail == normalizedEmail &&
+                tu.Tenant.Slug == dto.TenantSlug!.Trim().ToLowerInvariant() &&
+                tu.User.TenantId == tu.TenantId &&
+                tu.Tenant.IsActive)
+            .OrderBy(tu => tu.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (membership is null)
             throw new UnauthorizedException();
 
         var signInResult = await _signInManager.CheckPasswordSignInAsync(
-            user,
+            membership.User,
             dto.Password,
             lockoutOnFailure: true);
 
         if (!signInResult.Succeeded)
             throw new UnauthorizedException();
 
-        var tenant = await _tenantResolver.ResolveForUserAsync(
-            user.Id,
-            dto.TenantSlug,
-            cancellationToken);
+        var tenant = new TenantResolution(
+            membership.TenantId,
+            membership.Tenant.Name,
+            membership.Role);
 
-        if (tenant is null)
-            throw new UnauthorizedException("Invalid tenant or user membership.");
-
-        return BuildAuthResponse(user, tenant);
+        return BuildAuthResponse(membership.User, tenant);
     }
 
     public async Task<AuthResponseDto> RegisterAsync(
@@ -84,15 +95,25 @@ public sealed class IdentityAuthService : IAuthService
 
         await ValidationHelper.ValidateAndThrowAsync(dto, _registerValidator, cancellationToken);
 
-        var existingUser = await _userManager.FindByEmailAsync(dto.Email);
+        var normalizedEmail = _userManager.NormalizeEmail(dto.Email.Trim());
 
-        if (existingUser is not null)
+        var existingUser = await _dbContext.Users
+            .AsNoTracking()
+            .AnyAsync(
+                user => user.TenantId == _tenantContext.TenantId &&
+                        user.NormalizedEmail == normalizedEmail,
+                cancellationToken);
+
+        if (existingUser)
             throw new ConflictException($"A user with email '{dto.Email}' already exists.");
+
+        var email = dto.Email.Trim().ToLowerInvariant();
 
         var user = new ApplicationUser
         {
-            UserName = dto.Email,
-            Email = dto.Email,
+            TenantId = _tenantContext.TenantId,
+            UserName = BuildTenantUserName(_tenantContext.TenantId, email),
+            Email = email,
             FullName = dto.FullName.Trim(),
             EmailConfirmed = true
         };
@@ -101,14 +122,6 @@ public sealed class IdentityAuthService : IAuthService
 
         if (!createResult.Succeeded)
             throw new ValidationException(MapIdentityErrors(createResult.Errors));
-
-        var roleResult = await _userManager.AddToRoleAsync(user, dto.Role);
-
-        if (!roleResult.Succeeded)
-        {
-            await _userManager.DeleteAsync(user);
-            throw new ValidationException(MapIdentityErrors(roleResult.Errors));
-        }
 
         var tenantUser = new TenantUser
         {
@@ -144,6 +157,11 @@ public sealed class IdentityAuthService : IAuthService
             tenant.TenantId,
             tenant.TenantName,
             roles);
+    }
+
+    private static string BuildTenantUserName(int tenantId, string email)
+    {
+        return $"{tenantId}:{email}";
     }
 
     private static IEnumerable<ValidationFailure> MapIdentityErrors(

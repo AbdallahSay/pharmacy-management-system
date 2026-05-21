@@ -9,10 +9,10 @@ using Pharmacy.Application.Tenants.Interfaces;
 namespace Pharmacy.API.Controllers;
 
 /// <summary>
-/// Super-admin operations for managing pharmacy tenants.
-/// Creating a tenant provisions the pharmacy + its first Admin user in one call.
+/// Platform-admin operations for managing pharmacy tenants.
+/// Creating a tenant provisions the pharmacy + its first TenantAdmin user in one call.
 /// </summary>
-[Authorize(Policy = AuthPolicies.AdminOnly)]
+[Authorize(Policy = AuthPolicies.PlatformAdminOnly)]
 [ApiController]
 [Route("api/[controller]")]
 public sealed class TenantsController : ControllerBase
@@ -25,8 +25,8 @@ public sealed class TenantsController : ControllerBase
     }
 
     /// <summary>
-    /// Create a new pharmacy tenant with its first Admin user.
-    /// After this call the Admin can login using their email + password + the slug.
+    /// Create a new pharmacy tenant with its first TenantAdmin user.
+    /// After this call the TenantAdmin can login using their email + password + the slug.
     /// </summary>
     [HttpPost]
     [ProducesResponseType(typeof(TenantCreatedResponse), StatusCodes.Status201Created)]

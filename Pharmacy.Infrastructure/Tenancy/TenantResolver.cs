@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Pharmacy.Application.Common.Interfaces;
 using Pharmacy.Application.Tenancy.Interfaces;
 using Pharmacy.Infrastructure.Persistence;
 
@@ -7,10 +8,14 @@ namespace Pharmacy.Infrastructure.Tenancy;
 public sealed class TenantResolver : ITenantResolver
 {
     private readonly PharmacyDbContext _context;
+    private readonly ITenantContext _tenantContext;
 
-    public TenantResolver(PharmacyDbContext context)
+    public TenantResolver(
+        PharmacyDbContext context,
+        ITenantContext tenantContext)
     {
         _context = context;
+        _tenantContext = tenantContext;
     }
 
     public async Task<TenantResolution?> ResolveForUserAsync(
@@ -18,10 +23,16 @@ public sealed class TenantResolver : ITenantResolver
         string? tenantSlug,
         CancellationToken cancellationToken = default)
     {
+        using var bypass = _tenantContext.BeginBypass();
+
         var query = _context.TenantUsers
             .AsNoTracking()
             .Include(tu => tu.Tenant)
-            .Where(tu => tu.UserId == userId && tu.Tenant.IsActive);
+            .Include(tu => tu.User)
+            .Where(tu =>
+                tu.UserId == userId &&
+                tu.User.TenantId == tu.TenantId &&
+                tu.Tenant.IsActive);
 
         if (!string.IsNullOrWhiteSpace(tenantSlug))
         {
@@ -46,10 +57,16 @@ public sealed class TenantResolver : ITenantResolver
         int tenantId,
         CancellationToken cancellationToken = default)
     {
+        using var bypass = _tenantContext.BeginBypass();
+
         return _context.TenantUsers
             .AsNoTracking()
+            .Include(tu => tu.User)
             .AnyAsync(
-                tu => tu.UserId == userId && tu.TenantId == tenantId && tu.Tenant.IsActive,
+                tu => tu.UserId == userId &&
+                      tu.TenantId == tenantId &&
+                      tu.User.TenantId == tenantId &&
+                      tu.Tenant.IsActive,
                 cancellationToken);
     }
 }

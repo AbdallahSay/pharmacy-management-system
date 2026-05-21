@@ -38,23 +38,39 @@ public class PharmacyDbContext : IdentityDbContext<ApplicationUser, IdentityRole
     {
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
-            if (!typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
+            var methodName = typeof(BaseEntity).IsAssignableFrom(entityType.ClrType)
+                ? nameof(SetTenantAndSoftDeleteFilter)
+                : typeof(ITenantEntity).IsAssignableFrom(entityType.ClrType)
+                    ? nameof(SetTenantFilter)
+                    : null;
+
+            if (methodName is null)
                 continue;
 
             var method = typeof(PharmacyDbContext)
-                .GetMethod(nameof(SetTenantFilter), BindingFlags.NonPublic | BindingFlags.Instance)!
+                .GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance)!
                 .MakeGenericMethod(entityType.ClrType);
-
             method.Invoke(this, [modelBuilder]);
         }
     }
 
-    private void SetTenantFilter<TEntity>(ModelBuilder modelBuilder)
+    private void SetTenantAndSoftDeleteFilter<TEntity>(ModelBuilder modelBuilder)
         where TEntity : BaseEntity
     {
         Expression<Func<TEntity, bool>> filter = entity =>
             !entity.IsDeleted &&
-            (!_tenantContext.IsResolved || entity.TenantId == _tenantContext.TenantId);
+            (_tenantContext.IsBypassed ||
+             (_tenantContext.IsResolved && entity.TenantId == _tenantContext.TenantId));
+
+        modelBuilder.Entity<TEntity>().HasQueryFilter(filter);
+    }
+
+    private void SetTenantFilter<TEntity>(ModelBuilder modelBuilder)
+        where TEntity : class, ITenantEntity
+    {
+        Expression<Func<TEntity, bool>> filter = entity =>
+            _tenantContext.IsBypassed ||
+            (_tenantContext.IsResolved && entity.TenantId == _tenantContext.TenantId);
 
         modelBuilder.Entity<TEntity>().HasQueryFilter(filter);
     }

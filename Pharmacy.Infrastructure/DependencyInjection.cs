@@ -52,7 +52,7 @@ public static class DependencyInjection
             options.Password.RequireUppercase = true;
             options.Password.RequireNonAlphanumeric = false;
             options.Password.RequiredLength = 8;
-            options.User.RequireUniqueEmail = true;
+            options.User.RequireUniqueEmail = false;
             options.Lockout.MaxFailedAccessAttempts = 5;
             options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
         })
@@ -92,10 +92,13 @@ public static class DependencyInjection
         services.AddAuthorization(options =>
         {
             options.AddPolicy(AuthPolicies.PharmacyStaff, policy =>
-                policy.RequireRole(RoleNames.Admin, RoleNames.Pharmacist));
+                policy.RequireRole(RoleNames.TenantAdmin, RoleNames.Pharmacist));
 
-            options.AddPolicy(AuthPolicies.AdminOnly, policy =>
-                policy.RequireRole(RoleNames.Admin));
+            options.AddPolicy(AuthPolicies.TenantAdminOnly, policy =>
+                policy.RequireRole(RoleNames.TenantAdmin));
+
+            options.AddPolicy(AuthPolicies.PlatformAdminOnly, policy =>
+                policy.RequireRole(RoleNames.PlatformAdmin));
         });
 
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));

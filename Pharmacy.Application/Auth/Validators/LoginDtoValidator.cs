@@ -14,5 +14,9 @@ public sealed class LoginDtoValidator : AbstractValidator<LoginDto>
 
         RuleFor(x => x.Password)
             .NotEmpty();
+
+        RuleFor(x => x.TenantSlug)
+            .NotEmpty()
+            .MaximumLength(100);
     }
 }

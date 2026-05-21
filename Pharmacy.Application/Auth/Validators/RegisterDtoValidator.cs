@@ -30,7 +30,7 @@ public sealed class RegisterDtoValidator : AbstractValidator<RegisterDto>
 
         RuleFor(x => x.Role)
             .NotEmpty()
-            .Must(role => RoleNames.All.Contains(role))
-            .WithMessage($"Role must be one of: {string.Join(", ", RoleNames.All)}.");
+            .Must(role => RoleNames.TenantRoles.Contains(role))
+            .WithMessage($"Role must be one of: {string.Join(", ", RoleNames.TenantRoles)}.");
     }
 }

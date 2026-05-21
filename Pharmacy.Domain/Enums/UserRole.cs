@@ -2,7 +2,8 @@
 {
     public enum  UserRole
     {
-       Admin,
+       PlatformAdmin,
+       TenantAdmin,
        Pharmacist
     }
 }
