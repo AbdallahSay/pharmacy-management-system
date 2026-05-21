@@ -19,13 +19,17 @@ public class Program
         builder.Services.AddOpenApi("Pharmacy" , options => 
         options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
 
+        
+
         var app = builder.Build();
+       
 
         await app.ApplyMigrationsAsync();
+      
         await app.SeedIdentityAsync();
 
-        
-            app.MapOpenApi();
+
+        app.MapOpenApi();
             app.MapScalarApiReference(options =>
             {
                 options.Title = "Pharmacy API";
@@ -34,14 +38,20 @@ public class Program
         
 
         app.UseMiddleware<ExceptionHandlingMiddleware>();
+       
         app.UseHttpsRedirection();
-        app.UseAuthentication();
-        app.UseMiddleware<TenantResolutionMiddleware>();
+
         app.UseRouting();
+        
+
+
+        app.UseAuthentication();
+       
+        app.UseMiddleware<TenantResolutionMiddleware>();
+        
         app.UseAuthorization();
         app.MapControllers();
         
-
         await app.RunAsync();
     }
 }
