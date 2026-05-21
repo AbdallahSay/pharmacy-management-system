@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Pharmacy.Domain.Entities;
@@ -17,6 +17,7 @@ public class PharmacyDbContext : IdentityDbContext<ApplicationUser, IdentityRole
     public DbSet<Sale> Sales => Set<Sale>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<SaleItem> SaleItems => Set<SaleItem>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

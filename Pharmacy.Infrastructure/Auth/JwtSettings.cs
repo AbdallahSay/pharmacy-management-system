@@ -8,4 +8,5 @@ public sealed class JwtSettings
     public string Audience { get; init; } = string.Empty;
     public string Key { get; init; } = string.Empty;
     public int ExpiresInMinutes { get; init; } = 60;
+    public int RefreshTokenExpiresInDays { get; init; } = 7;
 }

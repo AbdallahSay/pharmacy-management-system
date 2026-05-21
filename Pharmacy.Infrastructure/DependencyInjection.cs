@@ -10,6 +10,7 @@ using Pharmacy.Domain.Entities;
 using Pharmacy.Domain.Interfaces;
 using Pharmacy.Infrastructure.Auth;
 using Pharmacy.Infrastructure.Persistence;
+using Pharmacy.Infrastructure.Services;
 using System.Text;
 
 namespace Pharmacy.Infrastructure;
@@ -89,6 +90,8 @@ public static class DependencyInjection
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IAuthService, IdentityAuthService>();
+
+        services.AddHostedService<TokenCleanupBackgroundService>();
 
         return services;
     }

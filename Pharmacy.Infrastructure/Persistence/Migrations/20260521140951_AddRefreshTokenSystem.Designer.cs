@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Pharmacy.Infrastructure;
 
@@ -11,9 +12,11 @@ using Pharmacy.Infrastructure;
 namespace Pharmacy.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(PharmacyDbContext))]
-    partial class PharmacyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260521140951_AddRefreshTokenSystem")]
+    partial class AddRefreshTokenSystem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -314,23 +317,14 @@ namespace Pharmacy.Infrastructure.Persistence.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("DeviceInfo")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("FamilyId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("LastUsedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("ParentTokenId")
-                        .HasColumnType("int");
-
                     b.Property<string>("ReasonRevoked")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("ReplacedByToken")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
@@ -349,21 +343,13 @@ namespace Pharmacy.Infrastructure.Persistence.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
-                    b.Property<string>("UserAgent")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ParentTokenId");
-
                     b.HasIndex("TokenHash")
                         .IsUnique();
-
-                    b.HasIndex("RevokedAt", "ExpiresAt");
 
                     b.HasIndex("UserId", "TenantId");
 
@@ -493,18 +479,11 @@ namespace Pharmacy.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Pharmacy.Domain.Entities.RefreshToken", b =>
                 {
-                    b.HasOne("Pharmacy.Domain.Entities.RefreshToken", "ParentToken")
-                        .WithMany("ChildTokens")
-                        .HasForeignKey("ParentTokenId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
                     b.HasOne("Pharmacy.Domain.Entities.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("ParentToken");
 
                     b.Navigation("User");
                 });
@@ -542,11 +521,6 @@ namespace Pharmacy.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Pharmacy.Domain.Entities.Category", b =>
                 {
                     b.Navigation("Medicines");
-                });
-
-            modelBuilder.Entity("Pharmacy.Domain.Entities.RefreshToken", b =>
-                {
-                    b.Navigation("ChildTokens");
                 });
 
             modelBuilder.Entity("Pharmacy.Domain.Entities.Sale", b =>
