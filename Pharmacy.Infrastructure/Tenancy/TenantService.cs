@@ -1,7 +1,9 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Pharmacy.Application.Common.Constants;
 using Pharmacy.Application.Common.Exceptions;
+using Pharmacy.Application.Common.Interfaces;
 using Pharmacy.Application.Common.Models;
 using Pharmacy.Application.Common.Validation;
 using Pharmacy.Application.Tenants.Contracts;
@@ -13,7 +15,7 @@ using Pharmacy.Infrastructure.Persistence;
 namespace Pharmacy.Infrastructure.Tenancy;
 
 /// <summary>
-/// Creates tenants + their first Admin user in a single transaction.
+/// Creates tenants + their first TenantAdmin user in a single transaction.
 /// Uses EF Core's CreateExecutionStrategy to stay compatible with
 /// SqlServerRetryingExecutionStrategy (which rejects manual BeginTransaction).
 /// </summary>
@@ -22,15 +24,18 @@ public sealed class TenantService : ITenantService
     private readonly PharmacyDbContext _dbContext;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IValidator<CreateTenantDto> _createValidator;
+    private readonly ITenantContext _tenantContext;
 
     public TenantService(
         PharmacyDbContext dbContext,
         UserManager<ApplicationUser> userManager,
-        IValidator<CreateTenantDto> createValidator)
+        IValidator<CreateTenantDto> createValidator,
+        ITenantContext tenantContext)
     {
         _dbContext = dbContext;
         _userManager = userManager;
         _createValidator = createValidator;
+        _tenantContext = tenantContext;
     }
 
     public async Task<TenantCreatedResponse> CreateAsync(
@@ -44,15 +49,10 @@ public sealed class TenantService : ITenantService
 
         // 2. Pre-flight checks (outside transaction — cheap reads)
         var slugExists = await _dbContext.Tenants
-            .IgnoreQueryFilters()
             .AnyAsync(t => t.Slug == normalizedSlug, cancellationToken);
 
         if (slugExists)
             throw new ConflictException($"A pharmacy with slug '{normalizedSlug}' already exists.");
-
-        var existingUser = await _userManager.FindByEmailAsync(dto.AdminEmail);
-        if (existingUser is not null)
-            throw new ConflictException($"A user with email '{dto.AdminEmail}' already exists.");
 
         // 3. Use EF Core's execution strategy so it works with SqlServerRetryingExecutionStrategy.
         //    BeginTransactionAsync() directly is forbidden when retry-on-failure is enabled.
@@ -79,42 +79,36 @@ public sealed class TenantService : ITenantService
                 // 5. Create admin user via Identity
                 var adminUser = new ApplicationUser
                 {
-                    UserName = dto.AdminEmail.Trim().ToLowerInvariant(),
+                    TenantId = tenant.Id,
+                    UserName = BuildTenantUserName(tenant.Id, dto.AdminEmail),
                     Email = dto.AdminEmail.Trim().ToLowerInvariant(),
                     FullName = dto.AdminFullName.Trim(),
                     EmailConfirmed = true,
                     CreatedAt = DateTime.UtcNow
                 };
 
-                var createResult = await _userManager.CreateAsync(adminUser, dto.AdminPassword);
-
-                if (!createResult.Succeeded)
+                using (_tenantContext.BeginBypass())
                 {
-                    var errors = createResult.Errors
-                        .Select(e => new FluentValidation.Results.ValidationFailure(e.Code, e.Description));
-                    throw new ValidationException(errors);
+                    var createResult = await _userManager.CreateAsync(adminUser, dto.AdminPassword);
+
+                    if (!createResult.Succeeded)
+                    {
+                        var errors = createResult.Errors
+                            .Select(e => new FluentValidation.Results.ValidationFailure(e.Code, e.Description));
+                        throw new ValidationException(errors);
+                    }
+
+                    // 6. Link user to the new tenant with a tenant-scoped admin role.
+                    _dbContext.TenantUsers.Add(new TenantUser
+                    {
+                        TenantId = tenant.Id,
+                        UserId = adminUser.Id,
+                        Role = RoleNames.TenantAdmin
+                    });
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
                 }
 
-                // 6. Assign Admin role
-                var roleResult = await _userManager.AddToRoleAsync(adminUser, "Admin");
-
-                if (!roleResult.Succeeded)
-                {
-                    await _userManager.DeleteAsync(adminUser);
-                    var errors = roleResult.Errors
-                        .Select(e => new FluentValidation.Results.ValidationFailure(e.Code, e.Description));
-                    throw new ValidationException(errors);
-                }
-
-                // 7. Link user → tenant
-                _dbContext.TenantUsers.Add(new TenantUser
-                {
-                    TenantId = tenant.Id,
-                    UserId = adminUser.Id,
-                    Role = "Admin"
-                });
-
-                await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
 
                 return new TenantCreatedResponse(
@@ -145,11 +139,9 @@ public sealed class TenantService : ITenantService
             throw new ArgumentOutOfRangeException(nameof(take));
 
         var total = await _dbContext.Tenants
-            .IgnoreQueryFilters()
             .CountAsync(cancellationToken);
 
         var tenants = await _dbContext.Tenants
-            .IgnoreQueryFilters()
             .OrderByDescending(t => t.CreatedAt)
             .Skip(skip)
             .Take(take)
@@ -162,5 +154,10 @@ public sealed class TenantService : ITenantService
             .ToListAsync(cancellationToken);
 
         return new PagedResponse<TenantListItemDto>(tenants, skip, take, total);
+    }
+
+    private static string BuildTenantUserName(int tenantId, string email)
+    {
+        return $"{tenantId}:{email.Trim().ToLowerInvariant()}";
     }
 }

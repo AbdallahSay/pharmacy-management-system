@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Pharmacy.Application.Common.Constants;
+using Pharmacy.Application.Common.Interfaces;
 using Pharmacy.Domain.Entities;
 using Pharmacy.Infrastructure.Persistence;
 
@@ -18,10 +19,10 @@ public static class IdentityDataSeeder
         var context = services.GetRequiredService<PharmacyDbContext>();
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole<int>>>();
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+        var tenantContext = services.GetRequiredService<ITenantContext>();
         var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger("IdentityDataSeeder");
 
         var tenant = await context.Tenants
-            .IgnoreQueryFilters()
             .FirstOrDefaultAsync(t => t.Slug == TenantDefaults.DefaultSlug);
 
         if (tenant is null)
@@ -39,7 +40,7 @@ public static class IdentityDataSeeder
             logger.LogInformation("Created default tenant {Slug}", tenant.Slug);
         }
 
-        foreach (var roleName in RoleNames.All)
+        foreach (var roleName in RoleNames.PlatformRoles)
         {
             if (await roleManager.RoleExistsAsync(roleName))
                 continue;
@@ -53,52 +54,73 @@ public static class IdentityDataSeeder
         const string adminEmail = "admin@pharmacy.local";
         const string adminPassword = "Admin@12345";
 
-        var adminUser = await userManager.FindByEmailAsync(adminEmail);
-
-        if (adminUser is null)
+        ApplicationUser? adminUser;
+        using (tenantContext.BeginBypass())
         {
-            adminUser = new ApplicationUser
-            {
-                UserName = adminEmail,
-                Email = adminEmail,
-                FullName = "System Administrator",
-                EmailConfirmed = true
-            };
+            adminUser = await context.Users
+                .FirstOrDefaultAsync(u =>
+                    u.TenantId == tenant.Id &&
+                    u.NormalizedEmail == userManager.NormalizeEmail(adminEmail));
 
-            var createResult = await userManager.CreateAsync(adminUser, adminPassword);
-
-            if (!createResult.Succeeded)
+            if (adminUser is null)
             {
-                logger.LogWarning(
-                    "Failed to seed admin user: {Errors}",
-                    string.Join(", ", createResult.Errors.Select(e => e.Description)));
-                return;
+                adminUser = new ApplicationUser
+                {
+                    TenantId = tenant.Id,
+                    UserName = BuildTenantUserName(tenant.Id, adminEmail),
+                    Email = adminEmail,
+                    FullName = "System Administrator",
+                    EmailConfirmed = true
+                };
+
+                var createResult = await userManager.CreateAsync(adminUser, adminPassword);
+
+                if (!createResult.Succeeded)
+                {
+                    logger.LogWarning(
+                        "Failed to seed admin user: {Errors}",
+                        string.Join(", ", createResult.Errors.Select(e => e.Description)));
+                    return;
+                }
+
+                await userManager.AddToRoleAsync(adminUser, RoleNames.PlatformAdmin);
+                logger.LogInformation("Seeded development platform admin user {Email}", adminEmail);
             }
-
-            await userManager.AddToRoleAsync(adminUser, RoleNames.Admin);
-            logger.LogInformation("Seeded development admin user {Email}", adminEmail);
         }
 
-        var hasMembership = await context.TenantUsers
-            .IgnoreQueryFilters()
-            .AnyAsync(tu => tu.TenantId == tenant.Id && tu.UserId == adminUser.Id);
-
-        if (!hasMembership)
+        using (tenantContext.BeginBypass())
         {
-            context.TenantUsers.Add(new TenantUser
-            {
-                TenantId = tenant.Id,
-                UserId = adminUser.Id,
-                Role = RoleNames.Admin
-            });
+            var membership = await context.TenantUsers
+                .FirstOrDefaultAsync(tu => tu.TenantId == tenant.Id && tu.UserId == adminUser.Id);
 
-            await context.SaveChangesAsync();
-            logger.LogInformation(
-                "Linked admin user to tenant {TenantId}",
-                tenant.Id);
+            if (membership is null)
+            {
+                context.TenantUsers.Add(new TenantUser
+                {
+                    TenantId = tenant.Id,
+                    UserId = adminUser.Id,
+                    Role = RoleNames.PlatformAdmin
+                });
+
+                await context.SaveChangesAsync();
+                logger.LogInformation(
+                    "Linked admin user to tenant {TenantId}",
+                    tenant.Id);
+            }
+            else if (membership.Role != RoleNames.PlatformAdmin)
+            {
+                membership.Role = RoleNames.PlatformAdmin;
+                await context.SaveChangesAsync();
+                logger.LogInformation(
+                    "Updated seeded admin membership role to {Role}",
+                    RoleNames.PlatformAdmin);
+            }
         }
 
-        await BackfillTenantIdsAsync(context, tenant.Id, logger);
+        using (tenantContext.BeginBypass())
+        {
+            await BackfillTenantIdsAsync(context, tenant.Id, logger);
+        }
     }
 
     private static async Task BackfillTenantIdsAsync(
@@ -107,25 +129,26 @@ public static class IdentityDataSeeder
         ILogger logger)
     {
         await context.Categories
-            .IgnoreQueryFilters()
             .Where(c => c.TenantId == 0)
             .ExecuteUpdateAsync(setters => setters.SetProperty(c => c.TenantId, tenantId));
 
         await context.Medicines
-            .IgnoreQueryFilters()
             .Where(m => m.TenantId == 0)
             .ExecuteUpdateAsync(setters => setters.SetProperty(m => m.TenantId, tenantId));
 
         await context.Sales
-            .IgnoreQueryFilters()
             .Where(s => s.TenantId == 0)
             .ExecuteUpdateAsync(setters => setters.SetProperty(s => s.TenantId, tenantId));
 
         await context.SaleItems
-            .IgnoreQueryFilters()
             .Where(si => si.TenantId == 0)
             .ExecuteUpdateAsync(setters => setters.SetProperty(si => si.TenantId, tenantId));
 
         logger.LogInformation("Backfilled TenantId {TenantId} on existing business data", tenantId);
+    }
+
+    private static string BuildTenantUserName(int tenantId, string email)
+    {
+        return $"{tenantId}:{email.Trim().ToLowerInvariant()}";
     }
 }

@@ -1,7 +1,7 @@
 ﻿namespace Pharmacy.Application.Tenants.DTOs;
 
 /// <summary>
-/// Input for creating a new pharmacy tenant with its first Admin user.
+/// Input for creating a new pharmacy tenant with its first TenantAdmin user.
 /// </summary>
 public sealed class CreateTenantDto
 {
@@ -14,12 +14,12 @@ public sealed class CreateTenantDto
     /// </summary>
     public string Slug { get; init; } = string.Empty;
 
-    /// <summary>Full name of the first Admin user for this pharmacy.</summary>
+    /// <summary>Full name of the first TenantAdmin user for this pharmacy.</summary>
     public string AdminFullName { get; init; } = string.Empty;
 
-    /// <summary>Email of the first Admin user.</summary>
+    /// <summary>Email of the first TenantAdmin user.</summary>
     public string AdminEmail { get; init; } = string.Empty;
 
-    /// <summary>Password of the first Admin user.</summary>
+    /// <summary>Password of the first TenantAdmin user.</summary>
     public string AdminPassword { get; init; } = string.Empty;
 }

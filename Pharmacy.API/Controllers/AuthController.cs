@@ -31,7 +31,7 @@ public class AuthController : ControllerBase
         return Ok(result);
     }
 
-    [Authorize(Policy = AuthPolicies.AdminOnly)]
+    [Authorize(Policy = AuthPolicies.TenantAdminOnly)]
     [HttpPost("register")]
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

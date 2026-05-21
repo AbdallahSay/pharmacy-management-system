@@ -1,6 +1,6 @@
 namespace Pharmacy.Domain.Entities;
 
-public class TenantUser
+public class TenantUser : ITenantEntity
 {
     public int Id { get; set; }
     public int TenantId { get; set; }
