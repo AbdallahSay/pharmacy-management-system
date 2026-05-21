@@ -19,28 +19,39 @@ public class Program
         builder.Services.AddOpenApi("Pharmacy" , options => 
         options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
 
+        
+
         var app = builder.Build();
+       
 
         await app.ApplyMigrationsAsync();
+      
         await app.SeedIdentityAsync();
 
-        if (app.Environment.IsDevelopment())
-        {
-            app.MapOpenApi();
+
+        app.MapOpenApi();
             app.MapScalarApiReference(options =>
             {
                 options.Title = "Pharmacy API";
                 options.OpenApiRoutePattern = "/openapi/Pharmacy.json";
             });
-        }
+        
 
         app.UseMiddleware<ExceptionHandlingMiddleware>();
+       
         app.UseHttpsRedirection();
+
+        app.UseRouting();
+        
+
+
         app.UseAuthentication();
+       
         app.UseMiddleware<TenantResolutionMiddleware>();
+        
         app.UseAuthorization();
         app.MapControllers();
-
+        
         await app.RunAsync();
     }
 }
