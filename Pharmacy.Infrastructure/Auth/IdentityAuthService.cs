@@ -161,7 +161,8 @@ public sealed class IdentityAuthService : IAuthService
 
     private static string BuildTenantUserName(int tenantId, string email)
     {
-        return $"{tenantId}:{email}";
+        var normalized = new string(email.Where(char.IsLetterOrDigit).ToArray());
+        return $"tenant{tenantId}{normalized}";
     }
 
     private static IEnumerable<ValidationFailure> MapIdentityErrors(

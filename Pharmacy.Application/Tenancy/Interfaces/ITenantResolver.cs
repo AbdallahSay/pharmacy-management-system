@@ -11,6 +11,11 @@ public interface ITenantResolver
         int userId,
         int tenantId,
         CancellationToken cancellationToken = default);
+
+    Task<TenantResolution?> ResolveForTenantAsync(
+        int userId,
+        int tenantId,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed record TenantResolution(int TenantId, string TenantName, string Role);

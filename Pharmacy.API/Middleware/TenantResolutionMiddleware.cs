@@ -33,8 +33,15 @@ public sealed class TenantResolutionMiddleware
             if (string.IsNullOrWhiteSpace(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
                 throw new UnauthorizedException("User context is missing from the token.");
 
-            if (!await tenantResolver.UserBelongsToTenantAsync(userId, tenantId, context.RequestAborted))
+            var tenant = await tenantResolver.ResolveForTenantAsync(userId, tenantId, context.RequestAborted);
+
+            if (tenant is null)
                 throw new ForbiddenException("You do not have access to this tenant.");
+
+            var roles = context.User.FindAll(ClaimTypes.Role).Select(claim => claim.Value);
+
+            if (!roles.Contains(tenant.Role, StringComparer.Ordinal))
+                throw new ForbiddenException("Token role is not valid for this tenant.");
 
             tenantContext.SetTenant(tenantId);
         }
