@@ -8,6 +8,9 @@ public static class DatabaseExtensions
 {
     public static async Task ApplyMigrationsAsync(this WebApplication app)
     {
+        if (app.Environment.IsEnvironment("Testing"))
+            return;
+
         try
         {
             Console.WriteLine(" Starting Migration...");
@@ -28,17 +31,19 @@ public static class DatabaseExtensions
             Console.Error.WriteLine(ex.ToString());
             await Console.Error.FlushAsync();
 
-           
-            await File.WriteAllTextAsync(
-                @"logs\migration_error.txt",
-                ex.ToString());
+            var logPath = Path.Combine(AppContext.BaseDirectory, "logs", "migration_error.txt");
+            Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
+
+            await File.WriteAllTextAsync(logPath, ex.ToString());
 
             throw;
         }
     }
     public static async Task SeedIdentityAsync(this WebApplication app)
     {
-       
+        if (app.Environment.IsProduction() || app.Environment.IsEnvironment("Testing"))
+            return;
+
         await IdentityDataSeeder.SeedAsync(app.Services);
     }
 }

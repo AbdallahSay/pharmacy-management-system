@@ -27,7 +27,12 @@ public static class DependencyInjection
         IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection");
-        ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException(
+                "Database connection string is not configured. Set ConnectionStrings:DefaultConnection via environment variables, user secrets, or appsettings.Local.json.");
+        }
 
         services.AddScoped<AuditableEntityInterceptor>();
 
@@ -65,7 +70,11 @@ public static class DependencyInjection
         var jwtSettings = configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
             ?? throw new InvalidOperationException("JWT settings are not configured.");
 
-        ArgumentException.ThrowIfNullOrWhiteSpace(jwtSettings.Key);
+        if (string.IsNullOrWhiteSpace(jwtSettings.Key))
+        {
+            throw new InvalidOperationException(
+                "JWT signing key is not configured. Set Jwt:Key via environment variables, user secrets, or appsettings.Local.json.");
+        }
         ArgumentException.ThrowIfNullOrWhiteSpace(jwtSettings.Issuer);
         ArgumentException.ThrowIfNullOrWhiteSpace(jwtSettings.Audience);
 

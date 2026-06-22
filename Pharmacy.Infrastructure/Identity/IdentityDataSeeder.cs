@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Pharmacy.Application.Common.Constants;
 using Pharmacy.Application.Common.Interfaces;
@@ -15,6 +16,11 @@ public static class IdentityDataSeeder
     {
         using var scope = serviceProvider.CreateScope();
         var services = scope.ServiceProvider;
+
+        var environment = services.GetRequiredService<IHostEnvironment>();
+
+        if (environment.IsProduction() || environment.IsEnvironment("Testing"))
+            return;
 
         var context = services.GetRequiredService<PharmacyDbContext>();
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole<int>>>();
