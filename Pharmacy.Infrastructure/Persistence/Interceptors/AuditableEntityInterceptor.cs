@@ -69,6 +69,15 @@ public sealed class AuditableEntityInterceptor : SaveChangesInterceptor
                     break;
             }
         }
+
+        foreach (var entry in context.ChangeTracker.Entries<Medicine>())
+        {
+            if (entry.State != EntityState.Modified)
+                continue;
+
+            entry.Property(m => m.Version).CurrentValue =
+                entry.Property(m => m.Version).OriginalValue + 1;
+        }
     }
 
     private void EnsureTenantContextIsAvailable(ITenantEntity entity)

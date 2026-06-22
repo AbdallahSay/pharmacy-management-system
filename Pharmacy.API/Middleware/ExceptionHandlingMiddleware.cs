@@ -43,6 +43,7 @@ public sealed class ExceptionHandlingMiddleware
             ConflictException => (HttpStatusCode.Conflict, "Conflict"),
             UnauthorizedException => (HttpStatusCode.Unauthorized, "Unauthorized"),
             ForbiddenException => (HttpStatusCode.Forbidden, "Forbidden"),
+            DbUpdateConcurrencyException => (HttpStatusCode.Conflict, "Conflict"),
             DbUpdateException dbEx when IsForeignKeyViolation(dbEx) => (
                 HttpStatusCode.Conflict,
                 "Conflict"),
@@ -70,6 +71,12 @@ public sealed class ExceptionHandlingMiddleware
                 title,
                 status = (int)statusCode,
                 detail = "Cannot delete this resource because it is referenced by related records."
+            },
+            DbUpdateConcurrencyException => new
+            {
+                title,
+                status = (int)statusCode,
+                detail = "The record was modified by another operation. Please refresh and try again."
             },
             _ => new
             {
