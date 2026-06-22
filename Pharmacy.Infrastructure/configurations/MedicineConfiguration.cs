@@ -22,6 +22,9 @@ namespace Pharmacy.Infrastructure.configurations
                 .HasColumnType("decimal(18,2)")
                 .IsRequired();
 
+            builder.Property(m => m.Version)
+                .IsConcurrencyToken();
+
             builder.HasIndex(m => new { m.TenantId, m.Name })
                 .IsUnique()
                 .HasFilter("[IsDeleted] = 0");
