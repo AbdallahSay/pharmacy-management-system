@@ -43,9 +43,11 @@ public class CategoriesController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Policy = AuthPolicies.TenantAdminOnly)]
     [HttpPost]
     [ProducesResponseType(typeof(CreateCategoryResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<CreateCategoryResponse>> Create(
         [FromBody] CreateCategoryDto dto,
@@ -59,9 +61,11 @@ public class CategoriesController : ControllerBase
             result);
     }
 
+    [Authorize(Policy = AuthPolicies.TenantAdminOnly)]
     [HttpPut("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Update(
@@ -73,9 +77,11 @@ public class CategoriesController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Policy = AuthPolicies.TenantAdminOnly)]
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)

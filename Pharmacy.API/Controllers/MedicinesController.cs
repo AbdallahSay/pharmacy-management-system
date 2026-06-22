@@ -43,9 +43,11 @@ public class MedicinesController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Policy = AuthPolicies.TenantAdminOnly)]
     [HttpPost]
     [ProducesResponseType(typeof(CreateMedicineResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<CreateMedicineResponse>> Create(
         [FromBody] CreateMedicineDto dto,
@@ -59,9 +61,11 @@ public class MedicinesController : ControllerBase
             result);
     }
 
+    [Authorize(Policy = AuthPolicies.TenantAdminOnly)]
     [HttpPut("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(
         int id,
@@ -72,9 +76,11 @@ public class MedicinesController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Policy = AuthPolicies.TenantAdminOnly)]
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)

@@ -126,6 +126,8 @@ public sealed class CategoryService : ICategoryService
 
         if (!deleted)
             throw new NotFoundException(nameof(Category), id);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
     private static async Task EnsureNameIsUniqueAsync(

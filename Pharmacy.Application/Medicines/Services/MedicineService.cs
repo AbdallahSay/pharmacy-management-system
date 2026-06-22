@@ -164,6 +164,8 @@ public sealed class MedicineService : IMedicineService
 
         if (!deleted)
             throw new NotFoundException(nameof(Medicine), id);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
     private static async Task<IReadOnlyDictionary<int, string>> ResolveCategoryNamesAsync(
